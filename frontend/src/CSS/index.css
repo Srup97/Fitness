@@ -1,0 +1,45 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-100 m-0 p-0 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .content {
+    @apply pt-8; /* Ajusta este valor según la altura del navbar */
+  }
+}
+
+@layer utilities {
+  .font-code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+}
+
+.close-button-container {
+  position: flex;
+  bottom: 16px; /* Ajusta según sea necesario */
+  right: 16px;  /* Ajusta según sea necesario */
+}
+
+/* Estilos para el botón de cerrar */
+.close-button {
+  color: #000;
+  background-color: transparent; /* Color de fondo normal */
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 16px;
+  transition: background-color 0.3s ease; /* Transición suave para el cambio de fondo */
+}
+
+.close-button:hover {
+  color: #ffffff;
+
+  background-color: red !important; /* Color de fondo en hover */
+}
