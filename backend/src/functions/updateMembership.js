@@ -2,7 +2,7 @@
 import cron from 'node-cron';
 import sequelize from '../db.js';
 
-cron.schedule('*/30 * * * *', async () => {
+cron.schedule('*/10 * * * *', async () => {
   // console.log('Verificando y actualizando membresías expiradas...');
   try {
     await sequelize.query(`

@@ -21,7 +21,7 @@ const UserData = () => {
       try {
         const token = localStorage.getItem('token');
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await axios.get('http://localhost:5000/api/usuario/getAllUser');
+        const response = await axios.get('http://localhost:5000/api/usuario/membresia_user');
         if (Array.isArray(response.data)) {
           setUsers(response.data);
           setFilteredUsers(response.data);
@@ -81,8 +81,8 @@ const UserData = () => {
     navigate('/changepassword', { state: { username } });
   };
 
-  const navigateToMembership = (username) => {
-    navigate('/infoMembresia', { state: { userId: username } });
+  const navigateToMembership = (userId) => {
+    navigate('/infoMembresia', { state: { userId: userId } });
   };
 
   if (loading) {
@@ -98,70 +98,107 @@ const UserData = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <div className='flex justify-between items-center mb-4'>
-        <h1 className='text-3xl font-bold mr-4'>Usuarios</h1>
-        {user.role === "admin" && (
-          <button 
-            onClick={handleCreateUser} 
-            className="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 transition"
-          >
-            Crear Usuario
-          </button>
-        )}
-      </div>
-
-      <input
-        type="text"
-        placeholder="Buscar por nombre, usuario, género, DNI, teléfono o email"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="border border-gray-300 rounded p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="py-2 px-4 text-left">Nombre</th>
-            <th className="py-2 px-4 text-left">Usuario</th>
-            <th className="py-2 px-4 text-left">Estado</th>
-            <th className="py-2 px-4 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.map((user) => (
-            <tr key={user.id} className={`hover:bg-gray-100 ${user.status ? "bg-white" : "bg-red-100"}`}>
-              <td className="py-2 px-4">{user.nombre} {user.apellido}</td>
-              <td className="py-2 px-4">{user.username}</td>
-              <td className="py-2 px-4">{user.status ? "Activo" : "Inactivo"}</td>
-              <td className="py-2 px-4 space-x-2">
-                <button onClick={() => openModal(user)} className="bg-green-500 text-white py-1 px-2 rounded hover:bg-green-600 transition">Ver detalles</button>
-                <button onClick={() => navigateToChangePassword(user.username)} className="bg-yellow-500 text-white py-1 px-2 rounded hover:bg-yellow-600 transition">Cambiar Contraseña</button>
-                <button onClick={() => navigateToMembership(user.id)} className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600 transition">Ver Membresía</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {modalIsOpen && (
-        <Modal onClose={closeModal}>
-          {selectedUser && (
-            <div className="p-4">
-              <h2 className="text-2xl font-bold mb-4">Detalles del Usuario</h2>
-              <p><strong>Nombre:</strong> {selectedUser.nombre} {selectedUser.apellido}</p>
-              <p><strong>Fecha de Nacimiento:</strong> {selectedUser.fecha_nacimiento}</p>
-              <p><strong>Teléfono:</strong> {selectedUser.telefono_numero}</p>
-              <p><strong>Email:</strong> {selectedUser.email}</p>
-              <p><strong>Dirección:</strong> {selectedUser.calle} en {selectedUser.ciudad}</p>
-              <p><strong>Estado:</strong> {selectedUser.status ? "Activo" : "Inactivo"}</p>
-              <button onClick={() => handleStatusChange(selectedUser)} className="bg-blue-500 text-white mt-4 py-2 px-4 rounded hover:bg-blue-600 transition">
-                Cambiar Estado
-              </button>
-            </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+      <div className='w-full max-w-6xl'>
+        <div className='flex justify-between items-center mb-4'>
+          <h1 className='text-3xl font-bold'>Usuarios</h1>
+          {user.role === "admin" && (
+            <button 
+              onClick={handleCreateUser} 
+              className="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 transition"
+            >
+              Crear Usuario
+            </button>
           )}
-        </Modal>
-      )}
+        </div>
+
+        <input
+          type="text"
+          placeholder="Buscar por nombre, usuario, o teléfono..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="mb-4 p-2 border border-gray-300 rounded w-full"
+        />
+
+        <div className="bg-white shadow-md rounded overflow-hidden w-full">
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr>
+                <th className="py-2 px-4 border-b border-gray-200">Nombre</th>
+                <th className="py-2 px-4 border-b border-gray-200">Usuario</th>
+                <th className="py-2 px-4 border-b border-gray-200">Membresía</th>
+                <th className="py-2 px-4 border-b border-gray-200">Estado</th>
+                <th className="py-2 px-4 border-b border-gray-200">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td className="py-2 px-4 border-b border-gray-200">{user.persona.nombre} {user.persona.apellido}</td>
+                  <td className="py-2 px-4 border-b border-gray-200">{user.username}</td>
+                 
+                  <td className="py-2 px-4 border-b border-gray-200">
+                    {user.membresias.length > 0 ? user.membresias.map((membresia) => (
+                      <div key={membresia.id}>{membresia.datosMembresia.nombre} - {membresia.status}</div>
+                    )) : 'Sin membresía'}
+                  </td>
+                  <td className="py-2 px-4 border-b border-gray-200">{user.status ? 'Activo' : 'Inactivo'}</td>
+                  <td className="py-2 px-4 border-b border-gray-200">
+                    <button 
+                      onClick={() => openModal(user)} 
+                      className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition"
+                    >
+                      Detalles
+                    </button>
+                    <button 
+                      onClick={() => navigateToChangePassword(user.username)} 
+                      className="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition ml-2"
+                    >
+                      Cambiar Contraseña
+                    </button>
+                    <button 
+                      onClick={() => navigateToMembership(user.id)} 
+                      className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition ml-2"
+                    >
+                      Ver Membresía
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {modalIsOpen && selectedUser && (
+  <Modal isOpen={modalIsOpen} onClose={closeModal}>
+    <div>
+      <h2 className="text-xl font-bold mb-4">Detalles del Usuario</h2>
+      <p><strong>Nombre:</strong> {selectedUser.persona.nombre} {selectedUser.persona.apellido}</p>
+      <p><strong>Usuario:</strong> {selectedUser.username}</p>
+      <p><strong>Teléfonos:</strong>
+        <ul>
+          {selectedUser.persona.telefonos.map((telefono) => (
+            <li key={telefono.id}>{telefono.tipo}: {telefono.numero}</li>
+          ))}
+        </ul>
+      </p>
+      <p><strong>Dirección:</strong>
+      <ul>
+          {selectedUser.persona.direccion.map((direccion) => (
+            <li key={direccion.id}>{`${direccion.calle} en ${direccion.ciudad} en ${direccion.pais}`}</li>
+          ))}
+        </ul>
+      </p>
+      <button 
+        onClick={() => handleStatusChange(selectedUser)} 
+        className="bg-red-500 text-white py-1 justify-center items-center flex px-3 rounded hover:bg-red-600 transition mt-4"
+      >
+        Cambiar Estado
+      </button>
+    </div>
+  </Modal>
+)}
+
     </div>
   );
 };

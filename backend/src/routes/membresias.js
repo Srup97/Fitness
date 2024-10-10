@@ -5,10 +5,43 @@ import { DatosMembresia } from '../models/index.js';
 import authMiddleware from '../functions/authMiddleware.js';
 import sequelize from '../db.js';
 import { MembresiaUsuario } from '../models/index.js';
+import { Op } from 'sequelize';
+
 
 const router = express.Router();
 
 router.post('/pago_membresia', authMiddleware, async (req, res) => {
+  const { 
+    membershipId,
+    tipo_factura,
+    userId,
+    devuelta,
+    selectedUser 
+  } = req.body;
+
+  try {
+    console.log('Request body:', req.body);
+
+    const results = await sequelize.query('CALL factura_pago_membresia(:producto_id, :tipo, :user_id, :devuelta, :usuario_id)', {
+      replacements: { 
+        producto_id: membershipId,
+        tipo: tipo_factura,
+        user_id: userId,
+        devuelta: devuelta,
+        usuario_id: selectedUser
+      },
+    });
+
+    console.log('Procedure results:', results);
+
+    res.status(201).json(results);
+  } catch (error) {
+    console.error('Error executing procedure:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/adquirir_membresia', authMiddleware, async (req, res) => {
   const { 
     membershipId,
     tipo_factura,
@@ -58,7 +91,9 @@ router.get('/active/:userId', async (req, res) => {
   try {
     // console.log('Fetching active membership for user:', userId);
     const membership = await MembresiaUsuario.findOne({
-      where: { user_id: userId, status: 'activa' }
+      where: { user_id: userId,status: {
+        [Op.or]: ['activa', 'expirada'] // Busca estados "activa" o "expirada"
+      } }
     });
     if (membership) {
       // console.log('Membership found:', membership);
@@ -74,7 +109,7 @@ router.get('/active/:userId', async (req, res) => {
   }
 });
 
-router.get('/getMembresiaUser/:usuario_id', async (req, res) => {
+router.get('/getMembresiaUser/:usuario_id', authMiddleware, async (req, res) => {
   try {
     const { usuario_id } = req.params;
     const results = await sequelize.query('CALL getMembresiaUser(:usuario_id)',  {

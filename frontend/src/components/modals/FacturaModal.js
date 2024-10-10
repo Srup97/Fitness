@@ -1,5 +1,5 @@
-// src/components/FacturaModal.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../../TailwindComponents/Modal.js';
 import axios from 'axios';
 import '../../CSS/FacturaModal.css';
@@ -7,6 +7,7 @@ import '../../CSS/FacturaModal.css';
 const FacturaModal = ({ isOpen, onRequestClose, factura, onPaymentComplete }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   if (!factura) return null;
 
@@ -26,6 +27,11 @@ const FacturaModal = ({ isOpen, onRequestClose, factura, onPaymentComplete }) =>
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const navigateToMembership = () => {
+    console.log(factura.username);
+    navigate('/infoMembresia', { state: { userId: factura.user_id } });
   };
 
   return (
@@ -66,7 +72,7 @@ const FacturaModal = ({ isOpen, onRequestClose, factura, onPaymentComplete }) =>
             Imprimir
           </button>
           <button
-            onClick={() => {/* Ver membresía */}}
+            onClick={navigateToMembership}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
             Ver Membresía

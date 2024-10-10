@@ -8,6 +8,7 @@ const Billing = () => {
   const navigate = useNavigate();
   const { membershipData, selectedUser } = location.state || {};
   const [amount, setAmount] = useState('');
+  const [activo, setActivo] = useState(null); // Cambiado a null para verificar si hay membresía
   const [refund, setRefund] = useState(0);
   const [isPaymentEnabled, setIsPaymentEnabled] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -15,6 +16,21 @@ const Billing = () => {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
+    console.log(membershipData);
+    const fetchActiveMembership = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/membresias/active/${selectedUser.id}`);
+        setActivo(response.data); // Establecer el estado de la membresía activa
+      } catch (error) {
+        console.error('Error fetching active membership:', error);
+      }
+    };
+
+    fetchActiveMembership();
+  }, [selectedUser.id]);
+
+  useEffect(() => {
+    // Solo calcular el reembolso si hay datos de membresía y monto
     if (amount && membershipData) {
       const calculatedRefund = parseFloat(amount) - parseFloat(membershipData.costo);
       setRefund(calculatedRefund >= 0 ? calculatedRefund : 0);
@@ -32,16 +48,19 @@ const Billing = () => {
   }, []);
 
   const handlePayment = async () => {
+    const token = localStorage.getItem('token');
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const endpoint = activo ? 'http://localhost:5000/api/membresias/pago_membresia' : 'http://localhost:5000/api/membresias/adquirir_membresia';
     try {
-      await axios.post('http://localhost:5000/api/membresias/pago_membresia', {
+      await axios.post(endpoint, {
         membershipId: membershipData.id,
-        tipo_factura: 'membresia',
+        tipo_factura: activo ? 'pago_cuota' : 'nueva_membresia',
         userId: user.id,
         devuelta: refund.toFixed(2),
-        selectedUser: selectedUser.id
+        selectedUser: selectedUser.id,
       });
       alert('Pago realizado con éxito');
-      navigate('/'); // Redirige a la página principal u otra página
+      navigate('/facturas/membresia'); // Redirige a la página principal u otra página
     } catch (error) {
       alert('Error al realizar el pago.');
     }
@@ -53,7 +72,7 @@ const Billing = () => {
 
   return (
     <div className="max-w-lg mx-auto p-5 mt-5 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold mb-4">Facturación de Membresía</h2>
+      <h2 className="text-2xl font-semibold mb-4">{activo ? 'Pago de Membresía' : 'Adquirir Membresía'}</h2>
       <div className="bg-gray-100 p-4 rounded-lg mb-4">
         <h3 className="text-xl font-semibold mb-2">Datos de Membresía</h3>
         <p><strong>Nombre de la Membresía:</strong> {membershipData.nombre}</p>
@@ -65,6 +84,15 @@ const Billing = () => {
         <p><strong>Nombre Completo:</strong> {selectedUser.nombre_completo}</p>
         <p><strong>Username:</strong> {selectedUser.username}</p>
       </div>
+      {activo ? (
+        <div className="text-green-600 font-bold mb-4">
+          <p><strong>Tienes una membresía activa.</strong></p>
+        </div>
+      ) : (
+        <div className="text-red-600 font-bold mb-4">
+          <p><strong>No tienes una membresía activa. Se adquirirá una nueva.</strong></p>
+        </div>
+      )}
       <div className="mb-4">
         <label htmlFor="paymentMethod" className="block mb-2">Método de Pago:</label>
         <select
@@ -110,7 +138,7 @@ const Billing = () => {
           className={`px-4 py-2 rounded-lg text-white ${isPaymentEnabled ? 'bg-blue-500 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
           disabled={!isPaymentEnabled}
         >
-          Pagar
+          {activo ? 'Pagar Cuota' : 'Adquirir Membresía'}
         </button>
         <button
           onClick={() => navigate(-1)}

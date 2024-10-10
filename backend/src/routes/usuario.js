@@ -1,10 +1,95 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import sequelize from '../db.js';
-import Usuario from '../models/usuarios/usuario.js';
-import authMiddleware from '../functions/authMiddleware.js'; // Importa tu middleware de autenticación
+import authMiddleware from '../functions/authMiddleware.js';
+import { MembresiaUsuario, Persona, Usuario, DatosMembresia, Telefono, Direccion } from '../models/index.js';
+
 
 const router = express.Router();
+
+
+router.get('/datos_usuario/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params; // Obtenemos el id del usuario desde los parámetros de la ruta
+
+  try {
+    const usuario = await Usuario.findOne({
+      where: { id }, // Condición para buscar por id
+      include: [
+        {
+          model: Persona,
+          as: 'persona',
+          include: [
+            {
+              model: Telefono,
+              as: 'telefonos',
+            },
+            {
+              model: Direccion,
+              as: 'direccion',
+            }
+          ]
+        },
+      ],
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json(usuario);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Error al obtener datos del usuario' });
+  }
+});
+
+router.get('/membresia_user',authMiddleware, async (req, res) => {
+  try {
+    const usuarios = await Usuario.findAll({
+      include: [
+        {
+          model: Persona,
+          as: 'persona',
+          include: [
+            {
+              model: Telefono,
+              as: 'telefonos',
+            },
+            {
+              model: Direccion,
+              as: 'direccion',
+            }
+          ] // Alias coincidente con la asociación
+        },
+        {
+          model: MembresiaUsuario,
+          as: 'membresias', // Alias coincidente con la asociación
+          include: [
+            {
+              model: DatosMembresia,
+              as: 'datosMembresia', // Alias coincidente con la asociación
+            },
+          ],
+        },
+      ],
+    });
+
+    // Modificar los resultados para incluir el estado basado en membresias
+    const result = usuarios.map(usuario => {
+      const hasMembresia = usuario.membresias && usuario.membresias.length > 0;
+      return {
+        ...usuario.toJSON(),
+        membresiaEstado: hasMembresia ? 'con membresia' : 'sin membresia',
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 // Ruta pública para cambiar la contraseña
 router.post('/change-password', async (req, res) => {
@@ -109,8 +194,6 @@ router.get('/getUserdata/:searchParam', authMiddleware, async (req, res) => {
     });
 
     // console.log('Results:', results); // Imprime los resultados en la consola
-
-    // Dependiendo de cómo se devuelvan los resultados, ajusta el acceso a los datos
     if (Array.isArray(results[0])) {
       res.json(results[0]); // Envía el array de resultados
     } else {
@@ -202,7 +285,7 @@ router.post('/registerUser', async (req, res) => {
 
 
 // Rutas CRUD para usuarios, requieren autenticación
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const usuarios = await Usuario.findAll();
     res.json(usuarios);
