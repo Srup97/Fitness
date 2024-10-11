@@ -43,7 +43,7 @@ router.get('/datos_usuario/:id', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/membresia_user',authMiddleware, async (req, res) => {
+router.get('/membresia_user', async (req, res) => {
   try {
     const usuarios = await Usuario.findAll({
       include: [

@@ -1,14 +1,60 @@
 // src/routes/membresiaRoutes.js
 
 import express from 'express';
-import { DatosMembresia } from '../models/index.js';
 import authMiddleware from '../functions/authMiddleware.js';
 import sequelize from '../db.js';
-import { MembresiaUsuario } from '../models/index.js';
 import { Op } from 'sequelize';
-
+import { MembresiaUsuario, Persona, Usuario, DatosMembresia, Telefono, Direccion } from '../models/index.js';
 
 const router = express.Router();
+
+router.get('/datosMembresia', async (req, res) => {
+  try {
+    const usuarios = await Usuario.findAll({
+      include: [
+        {
+          model: Persona,
+          as: 'persona',
+          include: [
+            {
+              model: Telefono,
+              as: 'telefonos',
+            },
+            {
+              model: Direccion,
+              as: 'direccion',
+            }
+          ] // Alias coincidente con la asociación
+        },
+        {
+          model: MembresiaUsuario,
+          as: 'membresias', // Alias coincidente con la asociación
+          required: true, // Solo incluye usuarios con membresías
+          include: [
+            {
+              model: DatosMembresia,
+              as: 'datosMembresia', // Alias coincidente con la asociación
+            },
+          ],
+        },
+      ],
+    });
+
+    // Modificar los resultados para incluir el estado basado en membresias
+    const result = usuarios.map(usuario => {
+      const hasMembresia = usuario.membresias && usuario.membresias.length > 0;
+      return {
+        ...usuario.toJSON(),
+        membresiaEstado: hasMembresia ? 'con membresia' : 'sin membresia',
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 router.post('/pago_membresia', authMiddleware, async (req, res) => {
   const { 

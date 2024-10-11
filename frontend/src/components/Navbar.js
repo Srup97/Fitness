@@ -41,6 +41,10 @@ function Navbar() {
     navigate(`/facturas/${tipo}`);
   };
 
+  const handleMembershipDataClick = () => {
+      navigate('/MembresiasData');
+  }
+
   return (
     <nav className="bg-gray-800 p-4 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
@@ -67,11 +71,20 @@ function Navbar() {
                       <button onClick={() => handleFacturaClick('producto')} className="block px-4 py-2 hover:bg-orange-500 hover:text-white w-full text-left">Producto</button>
                     </div>
                   </li>
+                
                 </>
               )}
-              <li>
-                <button onClick={handleMembershipClick} className="text-white hover:bg-orange-500 hover:text-white py-2 px-4 rounded transition duration-300">Membresias</button>
-              </li>
+
+              <li className="relative group p-3">
+                    <button className="text-white hover:bg-orange-500 hover:text-white py-2 px-4 rounded transition duration-300">Membresias</button>
+                    <div className="absolute hidden group-hover:block bg-white text-black py-2 mt-2 rounded shadow-lg">
+                      <button onClick={() => handleMembershipClick('membresia')} className="block px-6 py-2 hover:bg-orange-500 hover:text-white w-full text-left">Informacion Membresía</button>
+                     
+                      {user.role === 'admin' && (
+                      <button onClick={handleMembershipDataClick} className="block px-6 py-2 hover:bg-orange-500 hover:text-white w-full text-left">Membresias</button>
+                      )}
+                      </div>
+                  </li>
               <li>
                 <button onClick={handleLogout} className="text-white hover:bg-red-500 hover:text-white py-2 px-4 rounded transition duration-300">Logout</button>
               </li>

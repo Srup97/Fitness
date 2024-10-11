@@ -172,7 +172,7 @@ const UserData = () => {
     {modalIsOpen && selectedUser && (
   <Modal isOpen={modalIsOpen} onClose={closeModal}>
     <div>
-      <h2 className="text-xl font-bold mb-4">Detalles del Usuario</h2>
+      <h2 className="text-xl font-bold mb-4 justify-center flex">Detalles del Usuario</h2>
       <p><strong>Nombre:</strong> {selectedUser.persona.nombre} {selectedUser.persona.apellido}</p>
       <p><strong>Usuario:</strong> {selectedUser.username}</p>
       <p><strong>Teléfonos:</strong>

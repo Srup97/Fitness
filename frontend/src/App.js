@@ -15,6 +15,8 @@ import UserMembership from './components/UserMembership.js';
 import Billing from './components/PayMembership.js';
 import MembershipInfo from './components/MembershipInfo.js';
 import MembershipBill from './components/MembershipBill.js';
+import MembershipList from './components/MembershipData.js';
+
 const App = () => {
   return (
     <AuthProvider>
@@ -27,10 +29,35 @@ const App = () => {
           <Route path="/changepassword" element={<ChangePassword />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/Membresias" element={<Memberships />} />
-          <Route path="/userMembresia/:membershipId" element={<UserMembership />} />
           <Route path="/pagomembresia" element={<Billing />} />
           <Route path="/infoMembresia" element={<MembershipInfo />} />
-          <Route path="/facturas/:tipo" element={<MembershipBill />} />
+
+          {/* Rutas privadas */}
+          <Route
+            path="/userMembresia/:membershipId"
+            element={
+              <PrivateRoute requiredRole="admin"> {/* Cambia 'user' según el rol que requieras */}
+                <UserMembership />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/facturas/:tipo"
+            element={
+              <PrivateRoute requiredRole="admin"> {/* Cambia 'user' según el rol que requieras */}
+                <MembershipBill />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/MembresiasData"
+            element={
+              <PrivateRoute requiredRole="admin"> {/* Cambia 'admin' según el rol que requieras */}
+                <MembershipList />
+              </PrivateRoute>
+            }
+          />
+
           <Route
             path="/usuarios"
             element={
